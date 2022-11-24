@@ -1,7 +1,14 @@
-from typing import Any, Dict, List, Union
-from scipy import sparse as sp
-import numpy as np
-import pandas as pd
+from typing import (
+    Any,
+    Union,
+    Optional,
+    MutableMapping,
+    Hashable,
+    Sequence,
+)
+from scipy.sparse import spmatrix
+from numpy.typing import NDArray
+from pandas import DataFrame
 import logging
 
 __author__ = "jkanche"
@@ -10,59 +17,147 @@ __license__ = "MIT"
 
 
 class SummarizedExperiment:
-    """SummarizedExperiment class to represent genomic experiment data,
-    features, sample data and any other metadata
-    """
+    """Container for genomic experiment metadata and data."""
 
     def __init__(
         self,
-        assays: Dict[str, Union[np.ndarray, sp.spmatrix]],
-        rows: pd.DataFrame = None,
-        cols: pd.DataFrame = None,
-        metadata: Any = None,
+        assays: MutableMapping[Hashable, Union[NDArray[Any], spmatrix]],
+        rows: Optional[DataFrame] = None,
+        cols: Optional[DataFrame] = None,
+        metadata: Optional[MutableMapping[Hashable, Any]] = None,
     ) -> None:
         """Initialize an instance of `SummarizedExperiment`
 
-        Args:
-            assays (Dict[str, Union[np.ndarray, sp.spmatrix]]): list of matrices,
-                represented as dense (numpy) or sparse (scipy) matrices
-            rows (pd.DataFrame): features. Defaults to None.
-            cols (pd.DataFrame): sample metadata. Defaults to None.
-            metadata (Any, optional): experiment metadata describing the
-                methods. Defaults to None.
+        Parameters
+        ----------
+        assays : MutableMapping[Hashable, Union[NDArray[Any], spmatrix]]
+            A `MutableMapping` (e.g. `dict`) of with assay name as `key` with
+            as `value` a dense (NDArray[Any]) or sparse matrix (spmatrix).
+        rows : DataFrame | None
+            Feature data if any, must have the same number of columns as the
+            number of rows of each assay. Default = `None`.
+        cols : DataFrame | None
+            Sample data is any, must have the same number of columns as the
+            number of columns of each assay. Default = `None`.
+        metadata : MutableMapping[Hashable, Any] | None
+            A `MutableMapping` of experiment metadata, usually describing the
+            methods used, if any. Default = `None`.
         """
 
-        if (
-            assays is None
-            or not isinstance(assays, dict)
-            or len(assays.keys()) == 0
-        ):
-            raise Exception(
-                f"{assays} must be a dictionary and contain atleast a single numpy/scipy matrix"
+        self._rows = rows
+        self._assays = assays
+        self._cols = cols
+        self._metadata = metadata
+
+        self._validate_data()
+
+    def _validate_assays(
+        self, assays: MutableMapping[Hashable, Union[NDArray[Any], spmatrix]]
+    ) -> None:
+        """Validate the assays attribute.
+
+        Parameters
+        ----------
+        assays : MutableMapping[Hashable, Union[NDArray[Any], spmatrix]]
+            The assays to validate.
+        """
+        if len(assays) == 0:
+            raise ValueError(
+                "An empty `MutableMapping` is not a valid argument to the "
+                "`assays` parameter."
             )
 
-        self.rows = rows
-        self._assays = assays
-        self.cols = cols
-        self.metadata = metadata
+        # ensure all assays have the same shape
+        first_name = ""
+        shape: Optional[Sequence[int]] = None
+        for name, matrix in assays.items():
+            if shape is None:
+                first_name = name
+                shape = matrix.shape
+            else:
+                for i, dim in enumerate(shape):
+                    if matrix.shape[i] != dim:
+                        raise ValueError(
+                            f"The matrix: '{name}' does not have the same "
+                            f"shape as '{first_name}'."
+                        )
 
-    def assays(self) -> Dict[str, Union[np.ndarray, sp.spmatrix]]:
-        """Accessor to retrieve experimental data. This is a
-        dictionary containing more than one assay and can be
-        directly accessed using subset (`[]`) operator.
+    def _validate_rows(self, rows: Optional[DataFrame]) -> None:
+        """Validate the row data.
 
-        Returns:
-            Dict[str, Union[np.ndarray, sp.spmatrix]]: Dictionary of experiments
+        Parameters
+        ----------
+        rows : DataFrame | None
+            The rows to validate.
+        """
+        if rows is not None:
+            row_cols = rows.shape[1]
+            assay_rows = self._assays[next(iter(self._assays))].shape[0]
+            if row_cols != assay_rows:
+                raise ValueError(
+                    f"The row data has: '{row_cols}' columns which does not "
+                    f"equal the number of rows in the assays: '{assay_rows}'."
+                )
+
+    def _validate_cols(self, cols: Optional[DataFrame]) -> None:
+        """Validate the row data.
+
+        Parameters
+        ----------
+        cols : DataFrame | None
+            The cols to validate.
+        """
+        if cols is not None:
+            cols_cols = cols.shape[1]
+            assay_cols = self._assays[next(iter(self._assays))].shape[1]
+            if cols_cols != assay_cols:
+                raise ValueError(
+                    f"The column data has: '{cols_cols}' columns which does "
+                    "not equal the number of columns in the assays: "
+                    f"'{assay_cols}'."
+                )
+
+    def _validate_data(self) -> None:
+        """Validate the assay, row, and column data."""
+        # assays must be validated first
+        self._validate_assays(self._assays)
+        self._validate_rows(self._rows)
+        self._validate_cols(self._cols)
+
+    @property
+    def assays(
+        self,
+    ) -> MutableMapping[Hashable, Union[NDArray[Any], spmatrix]]:
+        """Get or set the the assays.
+
+        Parameters
+        ----------
+        assays : MutableMapping[Hashable, Union[NDArray[Any], spmatrix]]
+            A `MutableMapping` of the assay matrices.
+
+        Returns
+        -------
+        assays : MutableMapping[Hashable, Union[NDArray[Any], spmatrix]]
+            A `MutableMapping` of the assay matrices.
         """
         return self._assays
 
-    def rowData(self) -> pd.DataFrame:
+    @assays.setter
+    def assays(
+        self, assays: MutableMapping[Hashable, Union[NDArray[Any], spmatrix]]
+    ) -> None:
+        self._validate_assays(assays)
+        self._assays = assays
+
+    # HERE
+    @property
+    def rowData(self) -> DataFrame:
         """Accessor to retrieve features
 
         Returns:
             pd.DataFrame: returns features in the container
         """
-        return self.rows
+        return self._rows
 
     def colData(self) -> pd.DataFrame:
         """Accessor to retrieve sample metadata
