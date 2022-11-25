@@ -1,26 +1,23 @@
-import pytest
+"""Test `SummarizedExperimentTypes`."""
 
-from summarizedexperiment import SummarizedExperiment
-from genomicranges import GenomicRanges
-import numpy as np
 from random import random
-import pandas as pd
-from summarizedexperiment.RangeSummarizedExperiment import (
-    RangeSummarizedExperiment as rse,
-)
-from summarizedexperiment.SummarizedExperiment import (
-    SummarizedExperiment as se,
-)
 
-__author__ = "jkanche"
+from genomicranges import GenomicRanges  # type: ignore
+from numpy.random import rand
+from pandas import DataFrame
+
+from summarized_experiment import construct_summarized_experiment
+from summarized_experiment.ranged_summarized_experiment import (
+    RangedSummarizedExperiment,
+)
+from summarized_experiment.summarized_experiment import SummarizedExperiment
+
+__author__ = "jkanche, whargrea"
 __copyright__ = "jkanche"
 __license__ = "MIT"
 
 
-nrows = 200
-ncols = 6
-counts = np.random.rand(nrows, ncols)
-df_gr = pd.DataFrame(
+rows = DataFrame(
     {
         "seqnames": [
             "chr1",
@@ -43,37 +40,74 @@ df_gr = pd.DataFrame(
     }
 )
 
-gr = GenomicRanges.fromPandas(df_gr)
+gr_rows = GenomicRanges.fromPandas(rows)
 
-colData = pd.DataFrame(
+cols = DataFrame(
     {
         "treatment": ["ChIP", "Input"] * 3,
     }
 )
 
 
-def test_SE_creation():
-    tse = SummarizedExperiment(
-        assays={"counts": counts}, rowData=df_gr, colData=colData
-    )
+num_rows = 200
+num_cols = 6
+counts = {"counts": rand(num_rows, num_cols)}
 
-    assert tse is not None
-    assert isinstance(tse, se)
-    assert tse.shape == (200, 6)
+
+# nosec
+# noqa: B101
+def test_SE_creation():
+    summarized_experiment = construct_summarized_experiment(counts, rows, cols)
+
+    assert summarized_experiment is not None
+    assert isinstance(summarized_experiment, SummarizedExperiment)
+    assert summarized_experiment.shape == (200, 6)
+
+    _ = summarized_experiment[list(range(10)), list(range(3))]
+    _ = summarized_experiment[
+        [True] * 10 + [False] * 190, [True] * 3 + [False] * 3
+    ]
+    summarized_experiment_subset = summarized_experiment[0:10, 0:3]
+
+    assert summarized_experiment_subset is not None
+    assert isinstance(summarized_experiment_subset, SummarizedExperiment)
+    assert summarized_experiment_subset.rowData is not None
+    assert len(summarized_experiment_subset.rowData) == 10
+    assert summarized_experiment_subset.colData is not None
+    assert len(summarized_experiment_subset.colData) == 3
+    assert summarized_experiment_subset.shape == (10, 3)
 
 
 def test_RSE_creation():
-
-    trse = SummarizedExperiment(
-        assays={"counts": counts}, rowRanges=gr, colData=colData
+    ranged_summarized_experiment = construct_summarized_experiment(
+        counts, gr_rows, cols
     )
 
-    assert trse is not None
-    assert isinstance(trse, rse)
+    assert ranged_summarized_experiment is not None
+    assert isinstance(ranged_summarized_experiment, RangedSummarizedExperiment)
+
+    # TODO: fix genomic ranges for this type of slicing
+    # _ = ranged_summarized_experiment[list(range(10)), list(range(3))]
+    # _ = ranged_summarized_experiment[
+    #     [True] * 10 + [False] * 190, [True] * 3 + [False] * 3
+    # ]
+    ranged_summarized_experiment_subset = ranged_summarized_experiment[
+        0:10, 0:3
+    ]
+
+    assert ranged_summarized_experiment_subset is not None
+    assert isinstance(
+        ranged_summarized_experiment_subset, RangedSummarizedExperiment
+    )
+    assert ranged_summarized_experiment_subset.rowRanges is not None
+    assert len(ranged_summarized_experiment_subset.rowRanges.ranges) == 10
+    assert ranged_summarized_experiment_subset.colData is not None
+    assert len(ranged_summarized_experiment_subset.colData) == 3
+    assert ranged_summarized_experiment_subset.shape == (10, 3)
 
 
 def test_SE_none():
-    tse = SummarizedExperiment(assays={"counts": counts})
+    summarized_experiment = construct_summarized_experiment(counts)
 
-    assert tse is not None
-    assert isinstance(tse, se)
+    assert summarized_experiment is not None
+    assert isinstance(summarized_experiment, SummarizedExperiment)
