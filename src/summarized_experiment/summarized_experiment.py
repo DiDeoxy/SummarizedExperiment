@@ -88,11 +88,12 @@ class BaseSummarizedExperiment:
         """
         if rows is not None:
             rows_num_rows = rows.shape[0]
-            assay_num_rows = self._assays[next(iter(self._assays))].shape[0]
+            assay_num_rows = next(iter(self._assays.values())).shape[0]
             if rows_num_rows != assay_num_rows:
                 raise ValueError(
-                    f"The row data has: '{rows_num_rows}' columns which does not "
-                    f"equal the number of rows in the assays: '{assay_num_rows}'."
+                    f"The row data has: '{rows_num_rows}' columns which does "
+                    "not equal the number of rows in the assays: "
+                    f"'{assay_num_rows}'."
                 )
 
     def _validate_cols(self, cols: Optional[DataFrame]) -> None:
@@ -105,11 +106,11 @@ class BaseSummarizedExperiment:
         """
         if cols is not None:
             cols_num_rows = cols.shape[0]
-            assays_num_cols = self._assays[next(iter(self._assays))].shape[1]
+            assays_num_cols = next(iter(self._assays.values())).shape[1]
             if cols_num_rows != assays_num_cols:
                 raise ValueError(
-                    f"The column data has: '{cols_num_rows}' columns which does "
-                    "not equal the number of columns in the assays: "
+                    f"The column data has: '{cols_num_rows}' columns which "
+                    "does not equal the number of columns in the assays: "
                     f"'{assays_num_cols}'."
                 )
 
@@ -192,7 +193,7 @@ class BaseSummarizedExperiment:
         shape : Tuple[int, int]
             The shape of the `SummarizedExperiment`.
         """
-        return tuple(self._assays[next(iter(self._assays))].shape)
+        return tuple(next(iter(self._assays.values())).shape)
 
     def subset_assays(
         self,
