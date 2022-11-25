@@ -99,7 +99,7 @@ class RangedSummarizedExperiment(BaseSummarizedExperiment):
         rows_subset = (
             None
             if row_indices is None or self._rows is None
-            # needs to support boolean indexing
+            # TODO: support boolean indexing
             else self._rows[row_indices]  # type: ignore
         )
         cols_subset = (

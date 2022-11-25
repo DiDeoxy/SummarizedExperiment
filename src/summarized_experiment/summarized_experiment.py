@@ -308,9 +308,6 @@ class SummarizedExperiment(BaseSummarizedExperiment):
         row_indices = indices[0]
         col_indices = None if len(indices) == 1 else indices[1]
 
-        print(row_indices)
-        print(col_indices)
-
         assay_subsets = self.subset_assays(row_indices, col_indices)
         rows_subset = (
             None
