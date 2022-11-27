@@ -64,13 +64,13 @@ class RangedSummarizedExperiment(BaseSummarizedExperiment):
         self._rows = rows
 
     def __getitem__(
-        self, args: OptionalIndicesType
+        self, indices: OptionalIndicesType
     ) -> "RangedSummarizedExperiment":
         """Subset a `RangedSummarizedExperiment`.
 
         Parameters
         ----------
-        args : OptionalIndicesType
+        indices : OptionalIndicesType
             Row and possibly column indices to subset by. If `None` all rows or
             columns will be retained. If only one value is provided all columns
             will be retained.
@@ -85,15 +85,15 @@ class RangedSummarizedExperiment(BaseSummarizedExperiment):
         summarized_experiment : SummarizedExperiment
             A new `SummarizedExperiment` with the subset of data.
         """  # noqa: E501
-        num_args = len(args)
-        if num_args < 1 or num_args > 2:
+        num_indices = len(indices)
+        if num_indices < 1 or num_indices > 2:
             raise ValueError(
-                f"'{len(args)}' indices were given, at least '1' and a "
+                f"'{len(indices)}' indices were given, at least '1' and a "
                 "maximum of '2' are accepted."
             )
 
-        row_indices = args[0]
-        col_indices = None if len(args) == 1 else args[1]
+        row_indices = indices[0]
+        col_indices = None if len(indices) == 1 else indices[1]
 
         assay_subsets = self.subset_assays(row_indices, col_indices)
         rows_subset = (
@@ -144,7 +144,7 @@ class RangedSummarizedExperiment(BaseSummarizedExperiment):
         """
         sample_names = None if self._cols is None else self._cols.columns
         ranges_names = (
-            None if self._rows is None else self._rows.ranges().columns
+            None if self._rows is None else self._rows.ranges.columns
         )
         return f"""\
 Class: 'SummarizedExperiment'

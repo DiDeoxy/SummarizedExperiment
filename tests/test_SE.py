@@ -17,7 +17,7 @@ __copyright__ = "jkanche"
 __license__ = "MIT"
 
 
-rows = DataFrame(
+row_data = DataFrame(
     {
         "seqnames": [
             "chr1",
@@ -30,17 +30,16 @@ rows = DataFrame(
             "chr3",
             "chr3",
             "chr3",
-        ]
-        * 20,
-        "starts": range(100, 300),
-        "ends": range(110, 310),
-        "strand": ["-", "+", "+", "*", "*", "+", "+", "+", "-", "-"] * 20,
-        "score": range(0, 200),
-        "GC": [random() for _ in range(10)] * 20,
+        ],
+        "starts": range(100, 110),
+        "ends": range(110, 120),
+        "strand": ["-", "+", "+", "*", "*", "+", "+", "+", "-", "-"],
+        "score": range(0, 10),
+        "GC": [random() for _ in range(10)],
     }
 )
 
-gr_rows = GenomicRanges.fromPandas(rows)
+ranges_data = GenomicRanges(row_data)
 
 cols = DataFrame(
     {
@@ -57,7 +56,9 @@ counts = {"counts": rand(num_rows, num_cols)}
 # nosec
 # noqa: B101
 def test_SE_creation():
-    summarized_experiment = construct_summarized_experiment(counts, rows, cols)
+    summarized_experiment = construct_summarized_experiment(
+        counts, row_data, cols
+    )
 
     assert summarized_experiment is not None
     assert isinstance(summarized_experiment, SummarizedExperiment)
@@ -80,7 +81,7 @@ def test_SE_creation():
 
 def test_RSE_creation():
     ranged_summarized_experiment = construct_summarized_experiment(
-        counts, gr_rows, cols
+        counts, ranges_data, cols
     )
 
     assert ranged_summarized_experiment is not None
