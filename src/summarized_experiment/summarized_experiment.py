@@ -27,7 +27,7 @@ class BaseSummarizedExperiment:
 
         Parameters
         ----------
-        assays : AssaysType
+        assays : MutableMapping[str, NDArray[Any] | spmatrix]
             A `MutableMapping` (e.g. `dict`) of with assay name as `key` with
             as `value` a dense (NDArray[Any]) or sparse matrix (spmatrix).
         rows : DataFrame | None
@@ -127,12 +127,12 @@ class BaseSummarizedExperiment:
 
         Parameters
         ----------
-        assays : MutableMapping[str, Union[NDArray[Any], spmatrix]]
+        assays : MutableMapping[str, NDArray[Any] | spmatrix]
             A `MutableMapping` of the assay matrices.
 
         Returns
         -------
-        assays : MutableMapping[str, Union[NDArray[Any], spmatrix]]
+        assays : MutableMapping[str, NDArray[Any] | spmatrix]
             A `MutableMapping` of the assay matrices.
         """
         return self._assays
@@ -283,7 +283,7 @@ class SummarizedExperiment(BaseSummarizedExperiment):
 
         Parameters
         ----------
-        indices : OptionalIndicesType
+        indices : Sequence[List[bool] | List[int] | slice | None]
             Row and possibly column indices to subset by. If `None` all rows or
             columns will be retained. If only one value is provided all columns
             will be retained.

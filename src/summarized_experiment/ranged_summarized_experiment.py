@@ -27,7 +27,7 @@ class RangedSummarizedExperiment(BaseSummarizedExperiment):
 
         Parameters
         ----------
-        assays : AssaysType
+        assays : MutableMapping[str, NDArray[Any] | spmatrix]
             A `MutableMapping` (e.g. `dict`) of with assay name as `key` with
             as `value` a dense (NDArray[Any]) or sparse matrix (spmatrix).
         rows : GenomicRanges | None
@@ -70,7 +70,7 @@ class RangedSummarizedExperiment(BaseSummarizedExperiment):
 
         Parameters
         ----------
-        indices : OptionalIndicesType
+        indices : Sequence[List[bool] | List[int] | slice | None]
             Row and possibly column indices to subset by. If `None` all rows or
             columns will be retained. If only one value is provided all columns
             will be retained.
@@ -82,7 +82,7 @@ class RangedSummarizedExperiment(BaseSummarizedExperiment):
 
         Returns
         -------
-        summarized_experiment : SummarizedExperiment
+        ranged_summarized_experiment : RangedSummarizedExperiment
             A new `SummarizedExperiment` with the subset of data.
         """  # noqa: E501
         num_indices = len(indices)
@@ -99,8 +99,7 @@ class RangedSummarizedExperiment(BaseSummarizedExperiment):
         rows_subset = (
             None
             if row_indices is None or self._rows is None
-            # TODO: support boolean indexing
-            else self._rows[row_indices]  # type: ignore
+            else self._rows[row_indices]
         )
         cols_subset = (
             None

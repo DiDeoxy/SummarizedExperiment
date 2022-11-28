@@ -17,7 +17,7 @@ __license__ = "MIT"
 @overload
 def construct_summarized_experiment(
     assays: AssaysType,
-    rows: Optional[DataFrame] = None,
+    rows: Optional[DataFrame],
     cols: Optional[DataFrame] = None,
     metadata: Optional[MutableMapping[str, Any]] = None,
 ) -> SummarizedExperiment:
@@ -44,7 +44,7 @@ def construct_summarized_experiment(
 
     Parameters
     ----------
-    assays : AssaysType
+    assays : MutableMapping[str, NDArray[Any] | spmatrix]
         A `MutableMapping` (e.g. `dict`) of with assay name as `key` with as
         `value` a dense (NDArray[Any]) or sparse matrix (spmatrix).
     rows : DataFrame | GenomicRanges | None
